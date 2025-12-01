@@ -1,0 +1,425 @@
+openapi: 3.0.3
+info:
+  title: Music_API
+  version: "1.0.0"
+  description: >
+    API REST para gestionar artistas, álbumes y canciones.
+    Incluye operaciones CRUD y relaciones entre entidades.
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /artistas:
+    get:
+      summary: Obtener todos los artistas
+      tags: [Artistas]
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (fetch)
+          source: |
+            fetch("http://localhost:3000/artistas")
+              .then(res => res.json())
+              .then(data => console.log(data))
+              .catch(err => console.error(err));
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+
+            res = requests.get("http://localhost:3000/artistas")
+            print(res.json())
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X GET http://localhost:3000/artistas
+      responses:
+        200:
+          description: Lista de artistas
+        500:
+          description: Error interno del servidor
+
+    post:
+      summary: Crear un artista
+      tags: [Artistas]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - Nombre
+                - Nacionalidad
+                - FechaNacimientos
+              properties:
+                Nombre:
+                  type: string
+                  minLength: 2
+                  description: "Nombre del artista"
+                Nacionalidad:
+                  type: string
+                  minLength: 2
+                FechaNacimientos:
+                  type: string
+                  format: date
+                Fotografia:
+                  type: string
+                  format: binary
+            example:
+              Nombre: "Alejandra Guzmán"
+              Nacionalidad: "México"
+              FechaNacimientos: "1968-02-09"
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (multipart)
+          source: |
+            const formData = new FormData();
+            formData.append("Nombre", "Alejandra Guzmán");
+            formData.append("Nacionalidad", "México");
+            formData.append("FechaNacimientos", "1968-02-09");
+            formData.append("Fotografia", fileInput.files[0]);
+
+            fetch("http://localhost:3000/artistas", {
+              method: "POST",
+              body: formData
+            })
+              .then(res => res.json())
+              .then(data => console.log(data))
+              .catch(err => console.error(err));
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+
+            data = {
+              "Nombre": "Alejandra Guzmán",
+              "Nacionalidad": "México",
+              "FechaNacimientos": "1968-02-09"
+            }
+
+            files = {
+              "Fotografia": open("foto.jpg", "rb")
+            }
+
+            res = requests.post("http://localhost:3000/artistas", data=data, files=files)
+            print(res.json())
+        - lang: cURL
+          label: cURL (multipart)
+          source: |
+            curl -X POST http://localhost:3000/artistas \
+              -F "Nombre=Alejandra Guzmán" \
+              -F "Nacionalidad=México" \
+              -F "FechaNacimientos=1968-02-09" \
+              -F "Fotografia=@foto.jpg"
+      responses:
+        201:
+          description: Artista creado correctamente
+        400:
+          description: Error en los datos enviados
+          content:
+            application/json:
+              example:
+                error: "Datos inválidos"
+                detalles:
+                  - "El campo 'Nombre' no puede estar vacío."
+                  - "FechaNacimientos debe tener formato YYYY-MM-DD."
+        422:
+          description: Error de validación
+          content:
+            application/json:
+              example:
+                error: "Validación fallida"
+                campo: "Fotografia"
+                mensaje: "El archivo debe ser una imagen válida (jpg o png)."
+
+  /artistas/{id}:
+    get:
+      summary: Obtener un artista por ID
+      tags: [Artistas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (fetch)
+          source: |
+            fetch("http://localhost:3000/artistas/1")
+              .then(res => res.json())
+              .then(data => console.log(data))
+              .catch(err => console.error(err));
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+
+            res = requests.get("http://localhost:3000/artistas/1")
+            print(res.json())
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X GET http://localhost:3000/artistas/1
+      responses:
+        200:
+          description: Detalles del artista
+        404:
+          description: Artista no encontrado
+          content:
+            application/json:
+              example:
+                error: "No existe un artista con ese ID"
+
+    put:
+      summary: Actualizar un artista
+      tags: [Artistas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                Nombre:
+                  type: string
+                  minLength: 2
+                Nacionalidad:
+                  type: string
+                  minLength: 2
+                Fotografia:
+                  type: string
+                  format: binary
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (multipart)
+          source: |
+            const formData = new FormData();
+            formData.append("Nombre", "Nuevo Nombre");
+            formData.append("Nacionalidad", "Nueva Nacionalidad");
+            formData.append("Fotografia", fileInput.files[0]);
+
+            fetch("http://localhost:3000/artistas/1", {
+              method: "PUT",
+              body: formData
+            })
+              .then(res => res.json())
+              .then(data => console.log(data))
+              .catch(err => console.error(err));
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+
+            data = {
+              "Nombre": "Nuevo Nombre",
+              "Nacionalidad": "Nueva Nacionalidad"
+            }
+
+            files = {
+              "Fotografia": open("nueva_foto.jpg", "rb")
+            }
+
+            res = requests.put("http://localhost:3000/artistas/1", data=data, files=files)
+            print(res.json())
+        - lang: cURL
+          label: cURL (multipart)
+          source: |
+            curl -X PUT http://localhost:3000/artistas/1 \
+              -F "Nombre=Nuevo Nombre" \
+              -F "Nacionalidad=Nueva Nacionalidad" \
+              -F "Fotografia=@nueva_foto.jpg"
+      responses:
+        200:
+          description: Artista actualizado
+        400:
+          description: Datos inválidos
+        404:
+          description: Artista no encontrado
+
+    delete:
+      summary: Eliminar un artista
+      tags: [Artistas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (fetch)
+          source: |
+            fetch("http://localhost:3000/artistas/1", {
+              method: "DELETE"
+            })
+              .then(res => res.json())
+              .then(data => console.log(data))
+              .catch(err => console.error(err));
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+
+            res = requests.delete("http://localhost:3000/artistas/1")
+            print(res.json())
+        - lang: cURL
+          label: cURL
+          source: |
+            curl -X DELETE http://localhost:3000/artistas/1
+      responses:
+        200:
+          description: Artista eliminado
+        404:
+          description: Artista no encontrado
+
+  /albumes:
+    get:
+      summary: Obtener todos los álbumes
+      tags: [Álbumes]
+      responses:
+        200:
+          description: Lista de álbumes
+
+    post:
+      summary: Crear un álbum
+      tags: [Álbumes]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                Titulo:
+                  type: string
+                FechaLanzamiento:
+                  type: string
+                  format: date
+                IdArtista:
+                  type: integer
+      responses:
+        201:
+          description: Álbum creado
+
+  /albumes/{id}:
+    get:
+      summary: Obtener un álbum por ID
+      tags: [Álbumes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Datos del álbum
+        404:
+          description: Álbum no encontrado
+
+    put:
+      summary: Actualizar un álbum
+      tags: [Álbumes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                Titulo:
+                  type: string
+                FechaLanzamiento:
+                  type: string
+                  format: date
+                IdArtista:
+                  type: integer
+      responses:
+        200:
+          description: Álbum actualizado
+
+    delete:
+      summary: Eliminar un álbum
+      tags: [Álbumes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Álbum eliminado
+
+  /canciones:
+    get:
+      summary: Obtener todas las canciones
+      tags: [Canciones]
+      responses:
+        200:
+          description: Lista de canciones
+
+    post:
+      summary: Crear una canción
+      tags: [Canciones]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                Titulo:
+                  type: string
+                Duracion:
+                  type: string
+                IdAlbum:
+                  type: integer
+      responses:
+        201:
+          description: Canción creada
+
+  /canciones/{id}:
+    get:
+      summary: Obtener una canción por ID
+      tags: [Canciones]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Detalles de la canción
+        404:
+          description: Canción no encontrada
+
+    put:
+      summary: Actualizar una canción
+      tags: [Canciones]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            sc
