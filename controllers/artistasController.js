@@ -3,17 +3,17 @@ const { promisify } = require('util');
 const query = promisify(db.query).bind(db); 
 
 class ArtistasController {
-async ejecutarQuery(res, sql, params = [], successCallback) {
-    try {
-        const [rows] = await db.query(sql, params);
-        successCallback(rows);
-    } catch (err) {
-        res.status(500).json({
-            error: 'Ocurrió un error en la base de datos',
-            detalle: err.message
-        });
+    async ejecutarQuery(res, sql, params = [], successCallback) {
+        try {
+            const [rows] = await db.query(sql, params);
+            successCallback(rows);
+        } catch (err) {
+            res.status(500).json({
+                error: 'Ocurrió un error en la base de datos',
+                detalle: err.message
+            });
+        }
     }
-}
 
     obtenerFotografia(req) {
         return req.file?.filename || null;

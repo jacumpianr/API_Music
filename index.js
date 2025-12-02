@@ -20,6 +20,11 @@ app.use('/artistas', artistasRoutes);
 app.use('/albumes', albumesRoutes);
 app.use('/canciones', cancionesRoutes);
 
+process.on('uncaughtException', err => {
+    console.error("FATAL ERROR:", err);
+});
+
+
 app.get('/openapi.yaml', (req, res) => {
     res.sendFile(path.join(__dirname, 'docs', 'openapi.yaml'));
 });
