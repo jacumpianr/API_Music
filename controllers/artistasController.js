@@ -1,6 +1,8 @@
 const db = require('../database/conexion.js');
 const { createClient } = require('@supabase/supabase-js');
 
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
 class ArtistasController {
 
     // Método genérico ajustado para el objeto de respuesta de PostgreSQL
