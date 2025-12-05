@@ -1,4 +1,5 @@
 const db = require('../database/conexion.js');
+const { createClient } = require('@supabase/supabase-js');
 
 class ArtistasController {
 
@@ -19,6 +20,31 @@ class ArtistasController {
 
     obtenerFotografia(req) {
         return req.file?.filename || null;
+    }
+
+    async subirImagen(file) {
+        if (!file) return null;
+
+        const fileName = `${Date.now()}-${file.originalname}`;
+
+        const { data, error } = await supabase
+            .storage
+            .from('imagenes-artistas') 
+            .upload(fileName, file.buffer, {
+                contentType: file.mimetype
+            });
+
+        if (error) {
+            console.error("Error subiendo imagen:", error);
+            throw new Error("Error al subir la imagen a Supabase");
+        }
+
+        const { data: publicData } = supabase
+            .storage
+            .from('imagenes-artistas')
+            .getPublicUrl(fileName);
+
+        return publicData.publicUrl;
     }
 
     consultar = (req, res) => {
@@ -59,32 +85,39 @@ class ArtistasController {
         );
     }
 
-    insertar = (req, res) => {
+    insertar = async (req, res) => { // <--- OJO: Ahora debe ser async
         const { Nombre, Nacionalidad, FechaNacimientos } = req.body;
         
         if (!Nombre || !Nacionalidad || !FechaNacimientos) {
-            return res.status(422).json({
-                message: 'Faltan datos obligatorios',
-                camposNecesarios: ['Nombre', 'Nacionalidad', 'FechaNacimientos', 'Fotografia']
-            });
+            return res.status(422).json({ message: 'Faltan datos' });
         }
 
-        const Fotografia = this.obtenerFotografia(req);
+        try {
+            // 1. Subimos la imagen primero (si existe)
+            let Fotografia = null;
+            if (req.file) {
+                console.log("Subiendo imagen...");
+                Fotografia = await this.subirImagen(req.file);
+            }
 
-        // CAMBIO IMPORTANTE:
-        // 1. Usamos $1, $2, $3, $4 en orden.
-        // 2. Agregamos "RETURNING id" al final para que nos devuelva el ID creado.
-        this.ejecutarQuery(
-            res,
-            `INSERT INTO artistas (Nombre, Nacionalidad, FechaNacimientos, Fotografia)
-            VALUES ($1, $2, $3, $4) RETURNING id`,
-            [Nombre, Nacionalidad, FechaNacimientos, Fotografia],
-            (result) => res.status(201).json({
-                message: 'Artista registrado correctamente',
-                // EN PG: El ID viene en la primera fila devuelta por "RETURNING id"
-                id: result.rows[0].id 
-            })
-        );
+            // 2. Guardamos en la BD con la URL que nos dio Supabase
+            this.ejecutarQuery(
+                res,
+                `INSERT INTO artistas (Nombre, Nacionalidad, FechaNacimientos, Fotografia)
+                VALUES ($1, $2, $3, $4) RETURNING id`,
+                [Nombre, Nacionalidad, FechaNacimientos, Fotografia],
+                (result) => res.status(201).json({
+                    message: 'Artista registrado correctamente',
+                    id: result.rows[0].id,
+                    fotografiaUrl: Fotografia // Devolvemos la URL para confirmar
+                })
+            );
+        } catch (error) {
+            return res.status(500).json({ 
+                message: 'Error al procesar la imagen', 
+                detalle: error.message 
+            });
+        }
     }
 
     actualizar = (req, res) => {
