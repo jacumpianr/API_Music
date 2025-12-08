@@ -92,6 +92,45 @@ class CancionesController {
         );
     }
 
+    // Método PATCH: Actualización parcial para Canciones
+    actualizarPatch = (req, res) => {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const allowedFields = ['Titulo', 'Duracion', 'Genero', 'IdAlbum', 'IdArtista'];
+
+        const keys = Object.keys(updates).filter(key => allowedFields.includes(key));
+        const values = keys.map(key => updates[key]);
+
+        if (keys.length === 0) {
+            return res.status(400).json({
+                message: 'No se enviaron campos válidos para actualizar',
+                camposPermitidos: allowedFields
+            });
+        }
+
+        const setClause = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
+
+        values.push(id);
+
+        const sql = `UPDATE canciones SET ${setClause} WHERE id = $${values.length}`;
+
+        this.ejecutarQuery(
+            res,
+            sql,
+            values,
+            (result) => {
+                if (result.rowCount === 0) {
+                    return res.status(404).json({ message: 'Canción no encontrada' });
+                }
+                res.status(200).json({
+                    message: 'Canción actualizada parcialmente correctamente',
+                    camposActualizados: keys
+                });
+            }
+        );
+    }
+
     eliminar = (req, res) => {
         const { id } = req.params;
         // CAMBIO: ? por $1

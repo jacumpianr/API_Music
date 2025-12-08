@@ -9,6 +9,7 @@ router.post('/', cancionesController.insertar);
 router.route('/:id')
     .get(cancionesController.consultarDetalle)
     .put(cancionesController.actualizar)
-    .delete(cancionesController.eliminar);
+    .delete(cancionesController.eliminar)
+    .patch(cancionesController.actualizarPatch);
 
 module.exports = router;

@@ -9,6 +9,7 @@ router.post('/', upload.single('Fotografia'), artistasController.insertar);
 router.route('/:id')
     .get(artistasController.consultarDetalle)
     .put(upload.single('Fotografia'), artistasController.actualizar)
-    .delete(artistasController.eliminar);
+    .delete(artistasController.eliminar)
+    .patch(artistasController.actualizarPatch);
 
 module.exports = router;

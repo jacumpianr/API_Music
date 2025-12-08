@@ -99,6 +99,45 @@ class AlbumesController {
         );
     }
 
+    // Método PATCH: Solo actualiza los campos que se envían
+    actualizarPatch = (req, res) => {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const allowedFields = ['Titulo', 'FechaLanzamiento', 'IdArtista'];
+
+        const keys = Object.keys(updates).filter(key => allowedFields.includes(key));
+        const values = keys.map(key => updates[key]);
+
+        if (keys.length === 0) {
+            return res.status(400).json({ 
+                message: 'No se enviaron campos válidos para actualizar',
+                camposPermitidos: allowedFields
+            });
+        }
+
+        const setClause = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
+
+        values.push(id);
+
+        const sql = `UPDATE albumes SET ${setClause} WHERE id = $${values.length}`;
+
+        this.ejecutarQuery(
+            res,
+            sql,
+            values,
+            (result) => {
+                if (result.rowCount === 0) {
+                    return res.status(404).json({ message: 'Álbum no encontrado' });
+                }
+                res.status(200).json({ 
+                    message: 'Álbum actualizado parcialmente correctamente',
+                    camposActualizados: keys
+                });
+            }
+        );
+    }
+
     eliminar = (req, res) => {
         const { id } = req.params;
         // CAMBIO: ? por $1
