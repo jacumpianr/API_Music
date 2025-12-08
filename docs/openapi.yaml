@@ -522,3 +522,75 @@ paths:
       responses:
         200:
           description: Eliminada
+
+components:
+  schemas:
+    # --- Modelo de la Tabla Artistas ---
+    Artista:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único autogenerado
+          example: 1
+        Nombre:
+          type: string
+          description: Nombre artístico
+          example: "Alejandra Guzmán"
+        Nacionalidad:
+          type: string
+          example: "México"
+        FechaNacimientos:
+          type: string
+          format: date
+          example: "1968-02-09"
+        Fotografia:
+          type: string
+          description: URL o ruta de la imagen almacenada
+          example: "/uploads/artistas/foto_1.jpg"
+
+    # --- Modelo de la Tabla Albumes ---
+    Album:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        Titulo:
+          type: string
+          example: "Flor de Papel"
+        FechaLanzamiento:
+          type: string
+          format: date
+          example: "1991-10-15"
+        Portada:
+          type: string
+          description: URL de la portada
+          example: "/uploads/albumes/portada_10.jpg"
+        IdArtista:
+          type: integer
+          description: Clave foránea (Relación con Artista)
+          example: 1
+
+    # --- Modelo de la Tabla Canciones ---
+    Cancion:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 45
+        Titulo:
+          type: string
+          example: "Hacer el amor con otro"
+        Duracion:
+          type: string
+          description: Duración en formato mm:ss o segundos
+          example: "04:38"
+        ArchivoAudio:
+          type: string
+          description: URL del archivo MP3
+          example: "/uploads/canciones/audio_45.mp3"
+        IdAlbum:
+          type: integer
+          description: Clave foránea (Relación con Album)
+          example: 10
