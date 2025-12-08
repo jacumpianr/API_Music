@@ -4,8 +4,24 @@ info:
   version: "1.0.0"
   description: >
     API REST para gestionar artistas, álbumes y canciones.
+    
+    Incluye documentación de errores comunes (400, 404, 500) y modelos de datos.
   contact:
     name: Soporte API
+
+# -------------------------------------------------------------------------
+# CONFIGURACIÓN ESPECIAL PARA REDOC (ESTO FUERZA EL MENÚ LATERAL)
+# -------------------------------------------------------------------------
+x-tagGroups:
+  - name: General
+    tags:
+      - Artistas
+      - Albumes
+      - Canciones
+  - name: Modelos de Datos
+    tags:
+      - Modelos
+
 servers:
   - url: http://localhost:3000
 
@@ -16,11 +32,13 @@ tags:
     description: Gestión de discos y portadas
   - name: Canciones
     description: Gestión de pistas de audio
+  - name: Modelos
+    description: Estructura de la base de datos (Schemas)
 
-# -------------------------------------------------------------------
-# SECCIÓN PATHS (RUTAS)
-# -------------------------------------------------------------------
 paths:
+  # ==========================================
+  #                 ARTISTAS
+  # ==========================================
   /artistas:
     get:
       summary: Obtener todos los artistas
@@ -29,15 +47,21 @@ paths:
         - lang: JavaScript
           label: JS (fetch)
           source: fetch("http://localhost:3000/artistas").then(r => r.json());
+        - lang: cURL
+          label: cURL
+          source: curl -X GET http://localhost:3000/artistas
       responses:
         '200':
-          description: OK
+          description: Lista de artistas recuperada exitosamente
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Artista'
+        '500':
+          description: Error interno del servidor
+
     post:
       summary: Crear un artista
       tags: [Artistas]
@@ -59,114 +83,167 @@ paths:
                 Fotografia:
                   type: string
                   format: binary
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (FormData)
+          source: |
+            const fd = new FormData();
+            fd.append("Nombre", "Alejandra");
+            fd.append("Fotografia", fileInput.files[0]);
+            fetch("http://localhost:3000/artistas", { method: "POST", body: fd });
       responses:
         '201':
-          description: Creado
+          description: Artista creado correctamente
+        '400':
+          description: Datos inválidos (Faltan campos requeridos)
+        '422':
+          description: Error de validación (Formato de archivo incorrecto)
 
   /artistas/{id}:
     get:
-      summary: Obtener un artista
+      summary: Obtener un artista por ID
       tags: [Artistas]
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Detalle
+          description: Detalle del artista
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Artista'
-    put:
-      summary: Actualizar artista
-      tags: [Artistas]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                Nombre: { type: string }
-                Nacionalidad: { type: string }
-                Fotografia: { type: string, format: binary }
-      responses:
-        '200':
-          description: Actualizado
-    patch:
-      summary: Actualizar parcial
-      tags: [Artistas]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                Nombre: { type: string }
-      responses:
-        '200':
-          description: Actualizado
-    delete:
-      summary: Eliminar artista
-      tags: [Artistas]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Eliminado
+        '404':
+          description: Artista no encontrado
+          content:
+            application/json:
+              example: { "error": "No existe un artista con ese ID" }
 
+    put:
+      summary: Actualizar un artista (Completo)
+      tags: [Artistas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                Nombre:
+                  type: string
+                Nacionalidad:
+                  type: string
+                Fotografia:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Artista actualizado
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Artista no encontrado
+
+    patch:
+      summary: Actualizar parcialmente un artista
+      tags: [Artistas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                Nombre:
+                  type: string
+                Nacionalidad:
+                  type: string
+      responses:
+        '200':
+          description: Actualizado parcialmente
+        '404':
+          description: Artista no encontrado
+
+    delete:
+      summary: Eliminar un artista
+      tags: [Artistas]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Artista eliminado
+        '404':
+          description: Artista no encontrado
+
+  # ==========================================
+  #                 ALBUMES
+  # ==========================================
   /albumes:
     get:
-      summary: Obtener álbumes
+      summary: Obtener todos los álbumes
       tags: [Albumes]
       responses:
         '200':
-          description: OK
+          description: Lista de álbumes
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Album'
+        '500':
+          description: Error interno del servidor
+
     post:
-      summary: Crear álbum
+      summary: Crear un álbum
       tags: [Albumes]
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
               type: object
               required: [Titulo, IdArtista]
               properties:
-                Titulo: { type: string }
-                FechaLanzamiento: { type: string, format: date }
-                IdArtista: { type: integer }
-                Portada: { type: string, format: binary }
+                Titulo:
+                  type: string
+                FechaLanzamiento:
+                  type: string
+                  format: date
+                IdArtista:
+                  type: integer
+                Portada:
+                  type: string
+                  format: binary
       responses:
         '201':
-          description: Creado
+          description: Álbum creado
+        '400':
+          description: Faltan datos obligatorios (Titulo o IdArtista)
+        '404':
+          description: El Artista referenciado no existe
 
   /albumes/{id}:
     get:
-      summary: Obtener álbum
+      summary: Obtener un álbum por ID
       tags: [Albumes]
       parameters:
         - name: id
@@ -176,175 +253,222 @@ paths:
             type: integer
       responses:
         '200':
-          description: Detalle
+          description: Detalle del álbum
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Album'
-    put:
-      summary: Actualizar álbum
-      tags: [Albumes]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                Titulo: { type: string }
-                IdArtista: { type: integer }
-                Portada: { type: string, format: binary }
-      responses:
-        '200':
-          description: Actualizado
-    patch:
-      summary: Actualizar parcial
-      tags: [Albumes]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                Titulo: { type: string }
-      responses:
-        '200':
-          description: Actualizado
-    delete:
-      summary: Eliminar álbum
-      tags: [Albumes]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Eliminado
+        '404':
+          description: Álbum no encontrado
 
+    put:
+      summary: Actualizar un álbum (Completo)
+      tags: [Albumes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                Titulo:
+                  type: string
+                IdArtista:
+                  type: integer
+                Portada:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Actualizado correctamente
+        '404':
+          description: Álbum no encontrado
+
+    patch:
+      summary: Actualizar parcialmente un álbum
+      tags: [Albumes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                Titulo:
+                  type: string
+      responses:
+        '200':
+          description: Actualizado parcialmente
+        '404':
+          description: Álbum no encontrado
+
+    delete:
+      summary: Eliminar un álbum
+      tags: [Albumes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Eliminado correctamente
+        '404':
+          description: Álbum no encontrado
+
+  # ==========================================
+  #                 CANCIONES
+  # ==========================================
   /canciones:
     get:
-      summary: Obtener canciones
+      summary: Obtener todas las canciones
       tags: [Canciones]
       responses:
         '200':
-          description: OK
+          description: Lista de canciones
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cancion'
+        '500':
+          description: Error del servidor
+
     post:
-      summary: Subir canción
+      summary: Crear una canción (Subir audio)
       tags: [Canciones]
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
               type: object
               required: [Titulo, IdAlbum, ArchivoAudio]
               properties:
-                Titulo: { type: string }
-                Duracion: { type: string }
-                IdAlbum: { type: integer }
-                ArchivoAudio: { type: string, format: binary }
+                Titulo:
+                  type: string
+                Duracion:
+                  type: string
+                IdAlbum:
+                  type: integer
+                ArchivoAudio:
+                  type: string
+                  format: binary
       responses:
         '201':
-          description: Creado
+          description: Canción creada exitosamente
+        '400':
+          description: Datos inválidos o faltantes
+        '422':
+          description: Archivo de audio no soportado
 
   /canciones/{id}:
     get:
-      summary: Obtener canción
+      summary: Obtener una canción por ID
       tags: [Canciones]
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
           schema:
             type: integer
       responses:
         '200':
-          description: Detalle
+          description: Detalles de la canción
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cancion'
-    put:
-      summary: Actualizar canción
-      tags: [Canciones]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                Titulo: { type: string }
-                IdAlbum: { type: integer }
-                ArchivoAudio: { type: string, format: binary }
-      responses:
-        '200':
-          description: Actualizado
-    patch:
-      summary: Actualizar parcial
-      tags: [Canciones]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                Titulo: { type: string }
-      responses:
-        '200':
-          description: Actualizado
-    delete:
-      summary: Eliminar canción
-      tags: [Canciones]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Eliminado
+        '404':
+          description: Canción no encontrada
 
-# -------------------------------------------------------------------
-# AQUÍ ESTÁ EL TRUCO:
-# 'components' DEBE estar totalmente a la izquierda (sin espacios)
-# -------------------------------------------------------------------
+    put:
+      summary: Actualizar una canción (Completo)
+      tags: [Canciones]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                Titulo:
+                  type: string
+                IdAlbum:
+                  type: integer
+                ArchivoAudio:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Actualizada
+        '404':
+          description: Canción no encontrada
+
+    patch:
+      summary: Actualizar parcialmente una canción
+      tags: [Canciones]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                Titulo:
+                  type: string
+      responses:
+        '200':
+          description: Actualizada parcialmente
+        '404':
+          description: Canción no encontrada
+
+    delete:
+      summary: Eliminar una canción
+      tags: [Canciones]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Eliminada correctamente
+        '404':
+          description: Canción no encontrada
+
+# ==========================================
+#           MODELOS (SCHEMAS)
+# ==========================================
 components:
   schemas:
     Artista:
       type: object
-      title: Artista
-      description: Modelo de datos de un artista musical
+      # x-tags ayuda a agruparlos si usas redocly
+      x-tags: [Modelos] 
       properties:
         id:
           type: integer
@@ -361,12 +485,12 @@ components:
           example: '1968-02-09'
         Fotografia:
           type: string
-          example: /uploads/artistas/foto.jpg
-    
+          description: Ruta relativa
+          example: /uploads/artistas/foto_1.jpg
+
     Album:
       type: object
-      title: Album
-      description: Modelo de datos de un disco
+      x-tags: [Modelos]
       properties:
         id:
           type: integer
@@ -383,12 +507,11 @@ components:
           example: 1
         Portada:
           type: string
-          example: /uploads/portadas/img.jpg
+          example: /uploads/albumes/portada_10.jpg
 
     Cancion:
       type: object
-      title: Cancion
-      description: Modelo de datos de una pista de audio
+      x-tags: [Modelos]
       properties:
         id:
           type: integer
@@ -404,4 +527,4 @@ components:
           example: 10
         ArchivoAudio:
           type: string
-          example: /uploads/audio/song.mp3
+          example: /uploads/canciones/audio_45.mp3
