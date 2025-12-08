@@ -3,8 +3,8 @@ info:
   title: Music_API
   version: "1.0.0"
   description: >
-    API REST para gestionar artistas, álbumes y canciones.
-    Incluye operaciones CRUD completas y subida de archivos.
+      API REST para gestionar artistas, álbumes y canciones.
+      Incluye operaciones CRUD completas y subida de archivos.
   contact:
     name: Soporte API
 
