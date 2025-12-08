@@ -4,12 +4,9 @@ info:
   version: "1.0.0"
   description: >
     API REST para gestionar artistas, álbumes y canciones.
-    Incluye operaciones CRUD, soporte para subir archivos (imágenes/audio)
-    y documentación de los modelos de base de datos.
-
+    Documentación generada para ReDoc.
 servers:
   - url: http://localhost:3000
-
 tags:
   - name: Artistas
     description: Gestión de cantantes y bandas
@@ -17,24 +14,24 @@ tags:
     description: Gestión de discos y portadas
   - name: Canciones
     description: Gestión de pistas de audio
-
 paths:
-  # ==========================================
-  #                 ARTISTAS
-  # ==========================================
   /artistas:
     get:
       summary: Obtener todos los artistas
-      tags: [Artistas]
+      tags:
+        - Artistas
       x-codeSamples:
         - lang: JavaScript
           label: JS (fetch)
-          source: fetch("http://localhost:3000/artistas").then(r => r.json());
+          source: |
+            fetch("http://localhost:3000/artistas")
+              .then(res => res.json())
+              .then(console.log);
         - lang: cURL
           label: cURL
           source: curl -X GET http://localhost:3000/artistas
       responses:
-        200:
+        '200':
           description: Lista de artistas recuperada exitosamente
           content:
             application/json:
@@ -42,19 +39,22 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Artista'
-        500:
+        '500':
           description: Error interno del servidor
-
     post:
       summary: Crear un artista
-      tags: [Artistas]
+      tags:
+        - Artistas
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [Nombre, Nacionalidad, FechaNacimientos]
+              required:
+                - Nombre
+                - Nacionalidad
+                - FechaNacimientos
               properties:
                 Nombre:
                   type: string
@@ -80,15 +80,15 @@ paths:
             curl -X POST http://localhost:3000/artistas \
               -F "Nombre=Alejandra" -F "Fotografia=@foto.jpg"
       responses:
-        201:
+        '201':
           description: Artista creado correctamente
-        400:
+        '400':
           description: Datos inválidos
-
   /artistas/{id}:
     get:
       summary: Obtener un artista por ID
-      tags: [Artistas]
+      tags:
+        - Artistas
       parameters:
         - in: path
           name: id
@@ -96,18 +96,18 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        '200':
           description: Detalle del artista
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Artista'
-        404:
+        '404':
           description: Artista no encontrado
-
     put:
       summary: Actualizar un artista (Completo)
-      tags: [Artistas]
+      tags:
+        - Artistas
       parameters:
         - in: path
           name: id
@@ -131,17 +131,20 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS
-          source: fetch("http://localhost:3000/artistas/1", { method: "PUT", body: formData });
+          source: |
+            const fd = new FormData();
+            fd.append("Nombre", "Nuevo");
+            fetch("http://localhost:3000/artistas/1", { method: "PUT", body: fd });
         - lang: cURL
           label: cURL
           source: curl -X PUT http://localhost:3000/artistas/1 -F "Nombre=Nuevo"
       responses:
-        200:
+        '200':
           description: Artista actualizado
-
     patch:
       summary: Actualizar parcialmente un artista
-      tags: [Artistas]
+      tags:
+        - Artistas
       parameters:
         - in: path
           name: id
@@ -161,17 +164,20 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS
-          source: fetch("http://localhost:3000/artistas/1", { method: "PATCH", body: formData });
+          source: |
+            const fd = new FormData();
+            fd.append("Nacionalidad", "USA");
+            fetch("http://localhost:3000/artistas/1", { method: "PATCH", body: fd });
         - lang: cURL
           label: cURL
           source: curl -X PATCH http://localhost:3000/artistas/1 -F "Nacionalidad=USA"
       responses:
-        200:
+        '200':
           description: Actualizado parcialmente
-
     delete:
       summary: Eliminar un artista
-      tags: [Artistas]
+      tags:
+        - Artistas
       parameters:
         - in: path
           name: id
@@ -179,16 +185,13 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        '200':
           description: Artista eliminado
-
-  # ==========================================
-  #                 ALBUMES
-  # ==========================================
   /albumes:
     get:
       summary: Obtener todos los álbumes
-      tags: [Albumes]
+      tags:
+        - Albumes
       x-codeSamples:
         - lang: JavaScript
           label: JS
@@ -197,7 +200,7 @@ paths:
           label: cURL
           source: curl http://localhost:3000/albumes
       responses:
-        200:
+        '200':
           description: Lista de álbumes
           content:
             application/json:
@@ -205,17 +208,19 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Album'
-
     post:
       summary: Crear un álbum
-      tags: [Albumes]
+      tags:
+        - Albumes
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [Titulo, IdArtista]
+              required:
+                - Titulo
+                - IdArtista
               properties:
                 Titulo:
                   type: string
@@ -234,19 +239,18 @@ paths:
             const fd = new FormData();
             fd.append("Titulo", "Nuevo Album");
             fd.append("IdArtista", "1");
-            fd.append("Portada", file.files[0]);
             fetch("http://localhost:3000/albumes", { method: "POST", body: fd });
         - lang: cURL
           label: cURL
           source: curl -X POST http://localhost:3000/albumes -F "Titulo=X" -F "IdArtista=1"
       responses:
-        201:
+        '201':
           description: Álbum creado
-
   /albumes/{id}:
     get:
       summary: Obtener un álbum por ID
-      tags: [Albumes]
+      tags:
+        - Albumes
       parameters:
         - name: id
           in: path
@@ -254,18 +258,18 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        '200':
           description: Detalle del álbum
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Album'
-        404:
+        '404':
           description: No encontrado
-
     put:
       summary: Actualizar un álbum (Completo)
-      tags: [Albumes]
+      tags:
+        - Albumes
       parameters:
         - name: id
           in: path
@@ -288,17 +292,20 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS
-          source: fetch("http://localhost:3000/albumes/1", { method: "PUT", body: fd });
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Update");
+            fetch("http://localhost:3000/albumes/1", { method: "PUT", body: fd });
         - lang: cURL
           label: cURL
           source: curl -X PUT http://localhost:3000/albumes/1 -F "Titulo=Update"
       responses:
-        200:
+        '200':
           description: Actualizado
-
     patch:
       summary: Actualizar parcialmente un álbum
-      tags: [Albumes]
+      tags:
+        - Albumes
       parameters:
         - name: id
           in: path
@@ -319,17 +326,20 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS
-          source: fetch("http://localhost:3000/albumes/1", { method: "PATCH", body: fd });
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Partial");
+            fetch("http://localhost:3000/albumes/1", { method: "PATCH", body: fd });
         - lang: cURL
           label: cURL
           source: curl -X PATCH http://localhost:3000/albumes/1 -F "Titulo=Partial"
       responses:
-        200:
+        '200':
           description: Actualizado parcialmente
-
     delete:
       summary: Eliminar un álbum
-      tags: [Albumes]
+      tags:
+        - Albumes
       parameters:
         - name: id
           in: path
@@ -337,16 +347,13 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        '200':
           description: Eliminado
-
-  # ==========================================
-  #                 CANCIONES
-  # ==========================================
   /canciones:
     get:
       summary: Obtener todas las canciones
-      tags: [Canciones]
+      tags:
+        - Canciones
       x-codeSamples:
         - lang: JavaScript
           label: JS
@@ -355,7 +362,7 @@ paths:
           label: cURL
           source: curl http://localhost:3000/canciones
       responses:
-        200:
+        '200':
           description: Lista de canciones
           content:
             application/json:
@@ -363,17 +370,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cancion'
-
     post:
       summary: Crear una canción (Subir audio)
-      tags: [Canciones]
+      tags:
+        - Canciones
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [Titulo, IdAlbum, ArchivoAudio]
+              required:
+                - Titulo
+                - IdAlbum
+                - ArchivoAudio
               properties:
                 Titulo:
                   type: string
@@ -391,19 +401,18 @@ paths:
             const fd = new FormData();
             fd.append("Titulo", "Song A");
             fd.append("IdAlbum", "1");
-            fd.append("ArchivoAudio", file.files[0]);
             fetch("http://localhost:3000/canciones", { method: "POST", body: fd });
         - lang: cURL
           label: cURL
           source: curl -X POST http://localhost:3000/canciones -F "Titulo=A" -F "ArchivoAudio=@s.mp3"
       responses:
-        201:
+        '201':
           description: Canción creada
-
   /canciones/{id}:
     get:
       summary: Obtener una canción por ID
-      tags: [Canciones]
+      tags:
+        - Canciones
       parameters:
         - in: path
           name: id
@@ -411,18 +420,18 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        '200':
           description: Detalles de la canción
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cancion'
-        404:
+        '404':
           description: No encontrada
-
     put:
       summary: Actualizar una canción (Completo)
-      tags: [Canciones]
+      tags:
+        - Canciones
       parameters:
         - in: path
           name: id
@@ -447,17 +456,19 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS
-          source: fetch("http://localhost:3000/canciones/1", { method: "PUT", body: fd });
+          source: |
+            // ...setup FormData...
+            fetch("http://localhost:3000/canciones/1", { method: "PUT", body: fd });
         - lang: cURL
           label: cURL
           source: curl -X PUT http://localhost:3000/canciones/1 -F "Titulo=B"
       responses:
-        200:
+        '200':
           description: Actualizada
-
     patch:
       summary: Actualizar parcialmente una canción
-      tags: [Canciones]
+      tags:
+        - Canciones
       parameters:
         - in: path
           name: id
@@ -477,17 +488,20 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS
-          source: fetch("http://localhost:3000/canciones/1", { method: "PATCH", body: fd });
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Corrigiendo título");
+            fetch("http://localhost:3000/canciones/1", { method: "PATCH", body: fd });
         - lang: cURL
           label: cURL
-          source: curl -X PATCH http://localhost:3000/canciones/1 -F "Duracion=3:00"
+          source: curl -X PATCH http://localhost:3000/canciones/1 -F "Titulo=New"
       responses:
-        200:
+        '200':
           description: Actualizada parcialmente
-
     delete:
       summary: Eliminar una canción
-      tags: [Canciones]
+      tags:
+        - Canciones
       parameters:
         - in: path
           name: id
@@ -495,12 +509,8 @@ paths:
           schema:
             type: integer
       responses:
-        200:
+        '200':
           description: Eliminada
-
-# ==========================================
-#           MODELOS DE BASE DE DATOS
-# ==========================================
 components:
   schemas:
     Artista:
@@ -511,19 +521,18 @@ components:
           example: 1
         Nombre:
           type: string
-          example: "Alejandra Guzmán"
+          example: Alejandra Guzmán
         Nacionalidad:
           type: string
-          example: "México"
+          example: México
         FechaNacimientos:
           type: string
           format: date
-          example: "1968-02-09"
+          example: '1968-02-09'
         Fotografia:
           type: string
           description: URL relativa de la imagen
-          example: "/uploads/artistas/foto_1.jpg"
-
+          example: /uploads/artistas/foto_1.jpg
     Album:
       type: object
       properties:
@@ -532,11 +541,11 @@ components:
           example: 10
         Titulo:
           type: string
-          example: "Flor de Papel"
+          example: Flor de Papel
         FechaLanzamiento:
           type: string
           format: date
-          example: "1991-10-15"
+          example: '1991-10-15'
         IdArtista:
           type: integer
           description: FK a Artista
@@ -544,8 +553,7 @@ components:
         Portada:
           type: string
           description: URL relativa de la portada
-          example: "/uploads/albumes/portada_10.jpg"
-
+          example: /uploads/albumes/portada_10.jpg
     Cancion:
       type: object
       properties:
@@ -554,10 +562,10 @@ components:
           example: 45
         Titulo:
           type: string
-          example: "Hacer el amor con otro"
+          example: Hacer el amor con otro
         Duracion:
           type: string
-          example: "04:38"
+          example: '04:38'
         IdAlbum:
           type: integer
           description: FK a Album
@@ -565,4 +573,4 @@ components:
         ArchivoAudio:
           type: string
           description: URL relativa del audio
-          example: "/uploads/canciones/audio_45.mp3"
+          example: /uploads/canciones/audio_45.mp3
