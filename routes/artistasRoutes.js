@@ -10,6 +10,6 @@ router.route('/:id')
     .get(artistasController.consultarDetalle)
     .put(upload.single('Fotografia'), artistasController.actualizar)
     .delete(artistasController.eliminar)
-    .patch(artistasController.actualizarPatch);
+    .patch(upload.single('Fotografia'), artistasController.actualizarPatch);
 
 module.exports = router;
