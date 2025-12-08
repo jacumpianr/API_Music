@@ -1,10 +1,11 @@
 const db = require('../database/conexion.js');
-const { promisify } = require('util');
 
 class CancionesController {
+
     async ejecutarQuery(res, sql, params = [], successCallback) {
         try {
-            const [result] = await db.query(sql, params); 
+            // EN PG: Obtenemos el objeto 'result' completo, sin desestructurar [result]
+            const result = await db.query(sql, params); 
             successCallback(result);
         } catch (err) {
             console.error(err);
@@ -17,66 +18,92 @@ class CancionesController {
             res,
             `SELECT * FROM canciones`,
             [],
-            (rows) => res.status(200).json({ message: 'Todos las canciones', rows })
+            // EN PG: Los datos están en result.rows
+            (result) => res.status(200).json({ 
+                message: 'Todas las canciones', 
+                rows: result.rows 
+            })
         );
     }
 
     consultarDetalle = (req, res) => {
         const { id } = req.params; 
+        // CAMBIO: ? por $1
         this.ejecutarQuery(
             res,
-            `SELECT * FROM canciones WHERE id = ?`,
+            `SELECT * FROM canciones WHERE id = $1`,
             [id],
-            (rows) => {
-                if (rows.length === 0)
+            (result) => {
+                // EN PG: Verificamos result.rows.length
+                if (result.rows.length === 0)
                     return res.status(404).json({ message: 'Cancion no encontrada' });
 
-                res.status(200).json({ message: 'Cancion encontrada', rows });
+                res.status(200).json({ 
+                    message: 'Cancion encontrada', 
+                    rows: result.rows 
+                });
             }
         );
     }
 
     insertar = (req, res) => {
         const { Titulo, Duracion, Genero, IdAlbum, IdArtista } = req.body;
+        
+        // Validación básica (opcional pero recomendada)
+        if (!Titulo || !Duracion) {
+            return res.status(400).json({ message: 'Faltan campos obligatorios' });
+        }
+
+        // CAMBIO: 
+        // 1. Usamos $1, $2, $3, $4, $5
+        // 2. Agregamos "RETURNING id" al final
         this.ejecutarQuery(
             res,
             `INSERT INTO canciones (Titulo, Duracion, Genero, IdAlbum, IdArtista) 
-            VALUES (?, ?, ?, ?, ?)`,
+            VALUES ($1, $2, $3, $4, $5) RETURNING id`,
             [Titulo, Duracion, Genero, IdAlbum, IdArtista],
             (result) => res.status(201).json({
                 message: 'Cancion insertada correctamente',
-                id: result.insertId
+                // EN PG: El ID viene en result.rows[0].id
+                id: result.rows[0].id
             })
         );
     }
 
-    // Recoremos que este metodo se ejecuta mediante el el metodo PUT lo que quiere decir que actualizara TODO el objeto, no se debe dejar espacios en blanco.
     actualizar = (req, res) => {
         const { id } = req.params;
         const { Titulo, Duracion, Genero, IdAlbum, IdArtista } = req.body;
+
+        // CAMBIO: Debemos llevar la cuenta de los $ en orden
+        // Titulo=$1, Duracion=$2, Genero=$3, IdAlbum=$4, IdArtista=$5, id=$6
         this.ejecutarQuery(
             res,
             `UPDATE canciones 
-            SET Titulo = ?, Duracion = ?, Genero = ?, IdAlbum = ?, IdArtista = ?
-            WHERE id = ?`,
+            SET Titulo = $1, Duracion = $2, Genero = $3, IdAlbum = $4, IdArtista = $5
+            WHERE id = $6`,
             [Titulo, Duracion, Genero, IdAlbum, IdArtista, id],
             (result) => {
-                if (result.affectedRows === 0)
+                // EN PG: Usamos rowCount en lugar de affectedRows
+                if (result.rowCount === 0)
                     return res.status(404).json({ message: 'Cancion no encontrada' });
-                    res.status(200).json({ message: 'Cancion actualizada correctamente' });
+                
+                res.status(200).json({ message: 'Cancion actualizada correctamente' });
             }
         );
     }
 
     eliminar = (req, res) => {
         const { id } = req.params;
+        // CAMBIO: ? por $1
         this.ejecutarQuery(
             res,
-            `DELETE FROM canciones WHERE id = ?`,
+            `DELETE FROM canciones WHERE id = $1`,
             [id],
             (result) => {
-                if (result.affectedRows === 0)
+                // EN PG: Usamos rowCount
+                if (result.rowCount === 0)
                     return res.status(404).json({ message: 'Cancion no encontrada' });
+                
                 res.status(200).json({ message: 'Cancion eliminada correctamente' });
             }
         );

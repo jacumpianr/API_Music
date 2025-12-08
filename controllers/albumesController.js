@@ -1,10 +1,11 @@
 const db = require('../database/conexion.js');
-const { promisify } = require('util');
 
 class AlbumesController {
+
     async ejecutarQuery(res, sql, params = [], successCallback) {
         try {
-            const [result] = await db.query(sql, params); 
+            // EN PG: No desestructuramos [result], tomamos el objeto entero
+            const result = await db.query(sql, params); 
             successCallback(result);
         } catch (err) {
             console.error(err);
@@ -12,83 +13,103 @@ class AlbumesController {
         }
     }
 
-        consultar = (req, res) => {
+    consultar = (req, res) => {
         this.ejecutarQuery(
             res,
             `SELECT * FROM albumes`,
             [],
-            (rows) => res.status(200).json({ message: 'Todos los albumes', rows })
+            // EN PG: Los datos viven en result.rows
+            (result) => res.status(200).json({ 
+                message: 'Todos los albumes', 
+                rows: result.rows 
+            })
         );
     }
 
     consultarDetalle = (req, res) => {
         const { id } = req.params; 
+        // CAMBIO: ? por $1
         this.ejecutarQuery(
             res,
-            `SELECT * FROM albumes WHERE id = ?`,
+            `SELECT * FROM albumes WHERE id = $1`,
             [id],
-            (rows) => {
-                if (rows.length === 0)
+            (result) => {
+                if (result.rows.length === 0)
                     return res.status(404).json({ message: 'Album no encontrado' });
 
-                res.status(200).json({ message: 'Album encontrado', rows });
+                res.status(200).json({ 
+                    message: 'Album encontrado', 
+                    rows: result.rows 
+                });
             }
         );
     }
 
-insertar = (req, res) => {
-    const { Titulo, FechaLanzamiento, IdArtista} = req.body;
-    this.ejecutarQuery(
-        res,
-        `SELECT Id FROM artistas WHERE Id = ?`,
-        [IdArtista],
-        (rows) => {
-            if (rows.length === 0) {
-                return res.status(404).json({
-                    message: "El artista especificado no existe"
-                });
-            }
-            this.ejecutarQuery(
-                res,
-                `INSERT INTO albumes (Titulo, FechaLanzamiento, IdArtista)
-                VALUES (?, ?, ?)`,
-                [Titulo, FechaLanzamiento, IdArtista],
-                (result) => res.status(201).json({
-                    message: 'Álbum insertado correctamente',
-                    id: result.insertId
-                })
-            );
-        }
-    );
-}
+    insertar = (req, res) => {
+        const { Titulo, FechaLanzamiento, IdArtista} = req.body;
+        
+        // 1. Primero verificamos que el artista exista (Query anidado)
+        this.ejecutarQuery(
+            res,
+            `SELECT Id FROM artistas WHERE Id = $1`, // CAMBIO: ? por $1
+            [IdArtista],
+            (resultArtista) => {
+                // Si no hay filas, el artista no existe
+                if (resultArtista.rows.length === 0) {
+                    return res.status(404).json({
+                        message: "El artista especificado no existe"
+                    });
+                }
 
-    // Recoremos que este metodo se ejecuta mediante el el metodo PUT lo que quiere decir que actualizara TODO el objeto, no se debe dejar espacios en blanco.
+                // 2. Si existe, procedemos a insertar el álbum
+                this.ejecutarQuery(
+                    res,
+                    `INSERT INTO albumes (Titulo, FechaLanzamiento, IdArtista)
+                    VALUES ($1, $2, $3) RETURNING id`, // CAMBIO: placeholders y RETURNING
+                    [Titulo, FechaLanzamiento, IdArtista],
+                    (resultInsert) => res.status(201).json({
+                        message: 'Álbum insertado correctamente',
+                        // EN PG: El ID está en la primera fila devuelta
+                        id: resultInsert.rows[0].id
+                    })
+                );
+            }
+        );
+    }
+
     actualizar = (req, res) => {
         const { id } = req.params;
         const { Titulo, FechaLanzamiento, IdArtista} = req.body;
+        
+        // CAMBIO: Mantenemos el orden estricto de los $
+        // Titulo=$1, Fecha=$2, IdArtista=$3, id(del WHERE)=$4
         this.ejecutarQuery(
             res,
             `UPDATE albumes 
-            SET Titulo = ?, FechaLanzamiento = ?, IdArtista = ?
-            WHERE id = ?`,
+            SET Titulo = $1, FechaLanzamiento = $2, IdArtista = $3
+            WHERE id = $4`,
             [Titulo, FechaLanzamiento, IdArtista, id],
             (result) => {
-                if (result.affectedRows === 0)
+                // EN PG: Usamos rowCount
+                if (result.rowCount === 0)
                     return res.status(404).json({ message: 'Album no encontrado' });
-                    res.status(200).json({ message: 'Album actualizado correctamente' });
+                    
+                res.status(200).json({ message: 'Album actualizado correctamente' });
             }
         );
     }
 
     eliminar = (req, res) => {
         const { id } = req.params;
+        // CAMBIO: ? por $1
         this.ejecutarQuery(
             res,
-            `DELETE FROM albumes WHERE id = ?`,
+            `DELETE FROM albumes WHERE id = $1`,
             [id],
             (result) => {
-                if (result.affectedRows === 0)
-                    return res.status(404).json({ message: 'ArtisAlbumta no encontrado' });
+                if (result.rowCount === 0)
+                    return res.status(404).json({ message: 'Album no encontrado' });
+                
                 res.status(200).json({ message: 'Album eliminado correctamente' });
             }
         );
