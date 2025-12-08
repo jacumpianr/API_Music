@@ -483,10 +483,6 @@ components:
           type: string
           format: date
           example: '1968-02-09'
-        Fotografia:
-          type: string
-          description: Ruta relativa
-          example: /uploads/artistas/foto_1.jpg
 
     Album:
       type: object
@@ -505,9 +501,6 @@ components:
         IdArtista:
           type: integer
           example: 1
-        Portada:
-          type: string
-          example: /uploads/albumes/portada_10.jpg
 
     Cancion:
       type: object
@@ -522,9 +515,12 @@ components:
         Duracion:
           type: string
           example: '04:38'
+        Genero:
+          type: string
+          example: 'Rock Latino'
         IdAlbum:
           type: integer
           example: 10
-        ArchivoAudio:
-          type: string
-          example: /uploads/canciones/audio_45.mp3
+        IdArtista:
+          type: integer
+          example: 2
