@@ -4,12 +4,12 @@ info:
   version: "1.0.0"
   description: >
     API REST para gestionar artistas, álbumes y canciones.
-    
+    Incluye operaciones CRUD completas y subida de archivos.
   contact:
     name: Soporte API
 
 # -------------------------------------------------------------------------
-# CONFIGURACIÓN ESPECIAL PARA REDOC (ESTO FUERZA EL MENÚ LATERAL)
+# CONFIGURACIÓN ESPECIAL PARA REDOC
 # -------------------------------------------------------------------------
 x-tagGroups:
   - name: General
@@ -678,7 +678,6 @@ components:
   schemas:
     Artista:
       type: object
-      # x-tags ayuda a agruparlos si usas redocly
       x-tags: [Modelos] 
       properties:
         id:
@@ -726,9 +725,12 @@ components:
         Duracion:
           type: string
           example: '04:38'
+        Genero:
+          type: string
+          example: 'Rock Latino'
         IdAlbum:
           type: integer
           example: 10
         IdArtista:
           type: integer
-          example: 1
+          example: 2
