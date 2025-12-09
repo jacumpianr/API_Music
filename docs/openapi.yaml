@@ -733,4 +733,4 @@ components:
           example: 10
         IdArtista:
           type: integer
-          example: 2
+          example: 2 
