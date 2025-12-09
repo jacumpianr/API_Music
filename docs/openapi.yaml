@@ -45,10 +45,16 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS (fetch)
-          source: fetch("http://localhost:3000/artistas").then(r => r.json());
-        - lang: cURL
-          label: cURL
-          source: curl -X GET http://localhost:3000/artistas
+          source: |
+            fetch("http://localhost:3000/artistas")
+              .then(response => response.json())
+              .then(data => console.log(data));
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+            response = requests.get("http://localhost:3000/artistas")
+            print(response.json())
       responses:
         '200':
           description: Lista de artistas recuperada exitosamente
@@ -88,15 +94,38 @@ paths:
           source: |
             const fd = new FormData();
             fd.append("Nombre", "Alejandra");
+            fd.append("Nacionalidad", "México");
+            fd.append("FechaNacimientos", "1968-02-09");
             fd.append("Fotografia", fileInput.files[0]);
-            fetch("http://localhost:3000/artistas", { method: "POST", body: fd });
+
+            fetch("http://localhost:3000/artistas", {
+              method: "POST",
+              body: fd
+            }).then(r => r.json());
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+
+            url = "http://localhost:3000/artistas"
+            payload = {
+              "Nombre": "Alejandra",
+              "Nacionalidad": "México",
+              "FechaNacimientos": "1968-02-09"
+            }
+            files = {
+              "Fotografia": open("foto.jpg", "rb")
+            }
+
+            response = requests.post(url, data=payload, files=files)
+            print(response.json())
       responses:
         '201':
           description: Artista creado correctamente
         '400':
           description: Datos inválidos (Faltan campos requeridos)
         '422':
-          description: Error de validación (Formato de archivo incorrecto)
+          description: Error de validación
 
   /artistas/{id}:
     get:
@@ -108,6 +137,19 @@ paths:
           required: true
           schema:
             type: integer
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (fetch)
+          source: |
+            fetch("http://localhost:3000/artistas/1")
+              .then(r => r.json())
+              .then(console.log);
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+            res = requests.get("http://localhost:3000/artistas/1")
+            print(res.json())
       responses:
         '200':
           description: Detalle del artista
@@ -144,6 +186,27 @@ paths:
                 Fotografia:
                   type: string
                   format: binary
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (FormData)
+          source: |
+            const fd = new FormData();
+            fd.append("Nombre", "Nuevo Nombre");
+            fd.append("Nacionalidad", "Nueva Nacionalidad");
+            fd.append("Fotografia", fileInput.files[0]);
+
+            fetch("http://localhost:3000/artistas/1", {
+              method: "PUT",
+              body: fd
+            });
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+            url = "http://localhost:3000/artistas/1"
+            data = {"Nombre": "Nuevo", "Nacionalidad": "Nueva"}
+            files = {"Fotografia": open("img.jpg", "rb")}
+            requests.put(url, data=data, files=files)
       responses:
         '200':
           description: Artista actualizado
@@ -171,6 +234,21 @@ paths:
                   type: string
                 Nacionalidad:
                   type: string
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (FormData)
+          source: |
+            const fd = new FormData();
+            fd.append("Nacionalidad", "USA");
+            fetch("http://localhost:3000/artistas/1", {
+              method: "PATCH",
+              body: fd
+            });
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+            requests.patch("http://localhost:3000/artistas/1", data={"Nacionalidad": "USA"})
       responses:
         '200':
           description: Actualizado parcialmente
@@ -186,6 +264,16 @@ paths:
           required: true
           schema:
             type: integer
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (fetch)
+          source: |
+            fetch("http://localhost:3000/artistas/1", { method: "DELETE" });
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+            requests.delete("http://localhost:3000/artistas/1")
       responses:
         '200':
           description: Artista eliminado
@@ -199,6 +287,13 @@ paths:
     get:
       summary: Obtener todos los álbumes
       tags: [Albumes]
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS
+          source: fetch("http://localhost:3000/albumes").then(r => r.json());
+        - lang: Python
+          label: Python
+          source: print(requests.get("http://localhost:3000/albumes").json())
       responses:
         '200':
           description: Lista de álbumes
@@ -232,11 +327,31 @@ paths:
                 Portada:
                   type: string
                   format: binary
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (FormData)
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Flor de Papel");
+            fd.append("IdArtista", "1");
+            fd.append("Portada", fileInput.files[0]);
+
+            fetch("http://localhost:3000/albumes", {
+              method: "POST",
+              body: fd
+            });
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+            data = {"Titulo": "Flor de Papel", "IdArtista": 1}
+            files = {"Portada": open("cover.jpg", "rb")}
+            requests.post("http://localhost:3000/albumes", data=data, files=files)
       responses:
         '201':
           description: Álbum creado
         '400':
-          description: Faltan datos obligatorios (Titulo o IdArtista)
+          description: Faltan datos obligatorios
         '404':
           description: El Artista referenciado no existe
 
@@ -250,6 +365,13 @@ paths:
           required: true
           schema:
             type: integer
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS
+          source: fetch("http://localhost:3000/albumes/1").then(r => r.json());
+        - lang: Python
+          label: Python
+          source: requests.get("http://localhost:3000/albumes/1")
       responses:
         '200':
           description: Detalle del álbum
@@ -282,6 +404,17 @@ paths:
                 Portada:
                   type: string
                   format: binary
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (FormData)
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Nuevo Título");
+            fetch("http://localhost:3000/albumes/1", { method: "PUT", body: fd });
+        - lang: Python
+          label: Python (requests)
+          source: |
+            requests.put("http://localhost:3000/albumes/1", data={"Titulo": "Nuevo"})
       responses:
         '200':
           description: Actualizado correctamente
@@ -305,6 +438,16 @@ paths:
               properties:
                 Titulo:
                   type: string
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Solo Título");
+            fetch("http://localhost:3000/albumes/1", { method: "PATCH", body: fd });
+        - lang: Python
+          label: Python
+          source: requests.patch("http://localhost:3000/albumes/1", data={"Titulo": "Solo Titulo"})
       responses:
         '200':
           description: Actualizado parcialmente
@@ -320,6 +463,13 @@ paths:
           required: true
           schema:
             type: integer
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS
+          source: fetch("http://localhost:3000/albumes/1", { method: "DELETE" });
+        - lang: Python
+          label: Python
+          source: requests.delete("http://localhost:3000/albumes/1")
       responses:
         '200':
           description: Eliminado correctamente
@@ -333,6 +483,13 @@ paths:
     get:
       summary: Obtener todas las canciones
       tags: [Canciones]
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS
+          source: fetch("http://localhost:3000/canciones").then(r => r.json());
+        - lang: Python
+          label: Python
+          source: print(requests.get("http://localhost:3000/canciones").json())
       responses:
         '200':
           description: Lista de canciones
@@ -365,6 +522,26 @@ paths:
                 ArchivoAudio:
                   type: string
                   format: binary
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (FormData)
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Hacer el amor con otro");
+            fd.append("IdAlbum", "10");
+            fd.append("ArchivoAudio", fileInput.files[0]);
+
+            fetch("http://localhost:3000/canciones", {
+              method: "POST",
+              body: fd
+            });
+        - lang: Python
+          label: Python (requests)
+          source: |
+            import requests
+            data = {"Titulo": "Cancion A", "IdAlbum": 10}
+            files = {"ArchivoAudio": open("song.mp3", "rb")}
+            requests.post("http://localhost:3000/canciones", data=data, files=files)
       responses:
         '201':
           description: Canción creada exitosamente
@@ -383,6 +560,13 @@ paths:
           required: true
           schema:
             type: integer
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS
+          source: fetch("http://localhost:3000/canciones/1").then(r=>r.json());
+        - lang: Python
+          label: Python
+          source: requests.get("http://localhost:3000/canciones/1")
       responses:
         '200':
           description: Detalles de la canción
@@ -415,6 +599,17 @@ paths:
                 ArchivoAudio:
                   type: string
                   format: binary
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS (FormData)
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Nuevo Titulo");
+            fetch("http://localhost:3000/canciones/1", { method: "PUT", body: fd });
+        - lang: Python
+          label: Python
+          source: |
+            requests.put("http://localhost:3000/canciones/1", data={"Titulo": "Nuevo"})
       responses:
         '200':
           description: Actualizada
@@ -438,6 +633,16 @@ paths:
               properties:
                 Titulo:
                   type: string
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Titulo Corregido");
+            fetch("http://localhost:3000/canciones/1", { method: "PATCH", body: fd });
+        - lang: Python
+          label: Python
+          source: requests.patch("http://localhost:3000/canciones/1", data={"Titulo": "Corregido"})
       responses:
         '200':
           description: Actualizada parcialmente
@@ -453,6 +658,13 @@ paths:
           required: true
           schema:
             type: integer
+      x-codeSamples:
+        - lang: JavaScript
+          label: JS
+          source: fetch("http://localhost:3000/canciones/1", { method: "DELETE" });
+        - lang: Python
+          label: Python
+          source: requests.delete("http://localhost:3000/canciones/1")
       responses:
         '200':
           description: Eliminada correctamente
