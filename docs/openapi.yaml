@@ -45,10 +45,10 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS (fetch)
-          source: fetch("http://localhost:3000/artistas").then(r => r.json());
+          source: fetch("https://api-music-rose.vercel.app/artistas").then(r => r.json());
         - lang: cURL
           label: cURL
-          source: curl -X GET http://localhost:3000/artistas
+          source: curl -X GET https://api-music-rose.vercel.app/artistas
       responses:
         '200':
           description: Lista de artistas recuperada exitosamente
@@ -79,9 +79,6 @@ paths:
                 FechaNacimientos:
                   type: string
                   format: date
-                Fotografia:
-                  type: string
-                  format: binary
       x-codeSamples:
         - lang: JavaScript
           label: JS (FormData)
@@ -164,9 +161,29 @@ paths:
                   type: string
                 Nacionalidad:
                   type: string
-                Fotografia:
-                  type: string
-                  format: binary
+      x-code-samples:
+      - lang: 'JavaScript (Fetch)'
+        source: |
+          const formdata = new FormData();
+          formdata.append("Nombre", "Gustavo Cerati");
+          formdata.append("Nacionalidad", "Argentina");
+          formdata.append("FechaNacimientos", "1967-12-01");
+
+          fetch("https://api.tuservicio.com/artistas/1", requestOptions)
+            .then(response => response.text())
+            .then(result => console.log(result))
+            .catch(error => console.log('error', error));
+      - lang: 'Python (Requests)'
+        source: |
+          import requests
+
+          url = "https://api.tuservicio.com/artistas/1"
+
+          payload = {
+            'Nombre': 'Gustavo Cerati',
+            'Nacionalidad': 'Argentina'
+          }
+          print(response.text)
       responses:
         '200':
           description: Artista actualizado
@@ -194,6 +211,38 @@ paths:
                   type: string
                 Nacionalidad:
                   type: string
+      x-code-samples:
+      - lang: 'JavaScript (Fetch)'
+        source: |
+          const formdata = new FormData();
+          // En PATCH, solo enviamos el campo que queremos modificar
+          formdata.append("Nombre", "Nombre Corregido");
+
+          const requestOptions = {
+            method: 'PATCH',
+            body: formdata,
+            redirect: 'follow'
+          };
+
+          fetch("https://api.tuservicio.com/artistas/1", requestOptions)
+            .then(response => response.text())
+            .then(result => console.log(result))
+            .catch(error => console.log('error', error));
+      - lang: 'Python (Requests)'
+        source: |
+          import requests
+
+          url = "https://api.tuservicio.com/artistas/1"
+
+          # Solo enviamos el campo a actualizar
+          payload = {
+            'Nombre': 'Nombre Corregido'
+          }
+          
+          # Usamos el método .patch
+          response = requests.patch(url, data=payload)
+
+          print(response.text)
       responses:
         '200':
           description: Actualizado parcialmente
