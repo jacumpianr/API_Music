@@ -799,6 +799,7 @@ components:
   schemas:
     # Modelos de salida completos
     Artista:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       properties:
         id:
@@ -816,6 +817,7 @@ components:
           example: "1968-02-09"
 
     Album:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       properties:
         id:
@@ -833,6 +835,7 @@ components:
           example: 1
 
     Cancion:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       properties:
         id:
@@ -856,6 +859,7 @@ components:
 
     # Modelos de entrada (request bodies)
     ArtistaInput:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       required:
         - Nombre
@@ -874,6 +878,7 @@ components:
           example: "1968-02-09"
 
     ArtistaPatch:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       properties:
         Nombre:
@@ -885,6 +890,7 @@ components:
           format: date
 
     AlbumInput:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       required:
         - Titulo
@@ -902,6 +908,7 @@ components:
           example: 1
 
     AlbumPatch:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       properties:
         Titulo:
@@ -911,6 +918,7 @@ components:
           format: date
 
     CancionInput:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       required:
         - Titulo
@@ -935,6 +943,7 @@ components:
           example: 1
 
     CancionPatch:
+      x-tags: ["Modelos"]  # <--- AGREGAR ESTO
       type: object
       properties:
         Titulo:
