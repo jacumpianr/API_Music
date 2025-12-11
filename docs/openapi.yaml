@@ -161,6 +161,8 @@ paths:
                   type: string
                 Nacionalidad:
                   type: string
+                FechaNacimientos:
+                  type: string
       x-code-samples:
       - lang: 'JavaScript (Fetch)'
         source: |
@@ -210,6 +212,8 @@ paths:
                 Nombre:
                   type: string
                 Nacionalidad:
+                  type: string
+                FechaNacimientos:
                   type: string
       x-code-samples:
       - lang: 'JavaScript (Fetch)'
