@@ -4,13 +4,9 @@ info:
   version: "1.0.0"
   description: >
     API REST para gestionar artistas, álbumes y canciones.
-    
   contact:
     name: Soporte API
 
-# -------------------------------------------------------------------------
-# CONFIGURACIÓN ESPECIAL PARA REDOC (ESTO FUERZA EL MENÚ LATERAL)
-# -------------------------------------------------------------------------
 x-tagGroups:
   - name: General
     tags:
@@ -22,22 +18,22 @@ x-tagGroups:
       - Modelos
 
 servers:
-  - url: http://localhost:3000
+  - url: https://api-music-rose.vercel.app
 
 tags:
   - name: Artistas
     description: Gestión de cantantes y bandas
   - name: Albumes
-    description: Gestión de discos y portadas
+    description: Gestión de discos
   - name: Canciones
     description: Gestión de pistas de audio
   - name: Modelos
-    description: Estructura de la base de datos (Schemas)
+    description: Modelos de datos
 
 paths:
-  # ==========================================
-  #                 ARTISTAS
-  # ==========================================
+  # ====================================================
+  #                       ARTISTAS
+  # ====================================================
   /artistas:
     get:
       summary: Obtener todos los artistas
@@ -45,21 +41,22 @@ paths:
       x-codeSamples:
         - lang: JavaScript
           label: JS (fetch)
-          source: fetch("https://api-music-rose.vercel.app/artistas").then(r => r.json());
-        - lang: cURL
-          label: cURL
-          source: curl -X GET https://api-music-rose.vercel.app/artistas
+          source: |
+            fetch("https://api-music-rose.vercel.app/artistas")
+              .then(r => r.json())
+              .then(console.log);
+        - lang: cURL / HTTPie
+          source: |
+            curl https://api-music-rose.vercel.app/artistas
       responses:
         '200':
-          description: Lista de artistas recuperada exitosamente
+          description: Lista de artistas
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Artista'
-        '500':
-          description: Error interno del servidor
 
     post:
       summary: Crear un artista
@@ -72,51 +69,40 @@ paths:
               type: object
               required: [Nombre, Nacionalidad, FechaNacimientos]
               properties:
-                Nombre:
-                  type: string
-                Nacionalidad:
-                  type: string
-                FechaNacimientos:
-                  type: string
-                  format: date
+                Nombre: { type: string }
+                Nacionalidad: { type: string }
+                FechaNacimientos: { type: string, format: date }
       x-codeSamples:
         - lang: JavaScript
-          label: JS (FormData)
           source: |
             const fd = new FormData();
-            fd.append("Nombre", "Alejandra");
+            fd.append("Nombre", "Alejandra Guzmán");
             fd.append("Nacionalidad", "México");
             fd.append("FechaNacimientos", "1968-02-09");
-            fd.append("Fotografia", fileInput.files[0]);
 
-            fetch("http://localhost:3000/artistas", {
+            fetch("https://api-music-rose.vercel.app/artistas", {
               method: "POST",
               body: fd
-            }).then(r => r.json());
+            }).then(r => r.json()).then(console.log);
         - lang: Python
-          label: Python (requests)
           source: |
             import requests
-
-            url = "http://localhost:3000/artistas"
-            payload = {
-              "Nombre": "Alejandra",
+            data = {
+              "Nombre": "Alejandra Guzmán",
               "Nacionalidad": "México",
               "FechaNacimientos": "1968-02-09"
             }
-            files = {
-              "Fotografia": open("foto.jpg", "rb")
-            }
-
-            response = requests.post(url, data=payload, files=files)
-            print(response.json())
+            r = requests.post("https://api-music-rose.vercel.app/artistas", data=data)
+            print(r.json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f POST https://api-music-rose.vercel.app/artistas \
+              Nombre="Alejandra Guzmán" \
+              Nacionalidad="México" \
+              FechaNacimientos="1968-02-09"
       responses:
-        '201':
-          description: Artista creado correctamente
-        '400':
-          description: Datos inválidos (Faltan campos requeridos)
-        '422':
-          description: Error de validación (Formato de archivo incorrecto)
+        '201': { description: Artista creado }
+        '400': { description: Datos inválidos }
 
   /artistas/{id}:
     get:
@@ -126,30 +112,24 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
         '200':
-          description: Detalle del artista
+          description: Detalles del artista
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Artista'
-        '404':
-          description: Artista no encontrado
-          content:
-            application/json:
-              example: { "error": "No existe un artista con ese ID" }
+        '404': { description: Artista no encontrado }
 
     put:
-      summary: Actualizar un artista (Completo)
+      summary: Actualizar un artista (completo)
       tags: [Artistas]
       parameters:
         - in: path
           name: id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         required: true
         content:
@@ -157,42 +137,39 @@ paths:
             schema:
               type: object
               properties:
-                Nombre:
-                  type: string
-                Nacionalidad:
-                  type: string
-                FechaNacimientos:
-                  type: string
-      x-code-samples:
-      - lang: 'JavaScript (Fetch)'
-        source: |
-          const formdata = new FormData();
-          formdata.append("Nombre", "Gustavo Cerati");
-          formdata.append("Nacionalidad", "Argentina");
-          formdata.append("FechaNacimientos", "1967-12-01");
+                Nombre: { type: string }
+                Nacionalidad: { type: string }
+                FechaNacimientos: { type: string, format: date }
+      x-codeSamples:
+        - lang: JavaScript
+          source: |
+            const fd = new FormData();
+            fd.append("Nombre", "Nuevo Nombre");
+            fd.append("Nacionalidad", "Argentina");
+            fd.append("FechaNacimientos", "1980-01-01");
 
-          fetch("https://api.tuservicio.com/artistas/1", requestOptions)
-            .then(response => response.text())
-            .then(result => console.log(result))
-            .catch(error => console.log('error', error));
-      - lang: 'Python (Requests)'
-        source: |
-          import requests
-
-          url = "https://api.tuservicio.com/artistas/1"
-
-          payload = {
-            'Nombre': 'Gustavo Cerati',
-            'Nacionalidad': 'Argentina'
-          }
-          print(response.text)
+            fetch("https://api-music-rose.vercel.app/artistas/1", {
+              method: "PUT",
+              body: fd
+            }).then(r => r.json()).then(console.log);
+        - lang: Python
+          source: |
+            import requests
+            data = {
+              "Nombre": "Nuevo Nombre",
+              "Nacionalidad": "Argentina",
+              "FechaNacimientos": "1980-01-01"
+            }
+            print(requests.put("https://api-music-rose.vercel.app/artistas/1", data=data).json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f PUT https://api-music-rose.vercel.app/artistas/1 \
+              Nombre="Nuevo Nombre" \
+              Nacionalidad="Argentina" \
+              FechaNacimientos="1980-01-01"
       responses:
-        '200':
-          description: Artista actualizado
-        '400':
-          description: Datos inválidos
-        '404':
-          description: Artista no encontrado
+        '200': { description: Artista actualizado }
+        '404': { description: No encontrado }
 
     patch:
       summary: Actualizar parcialmente un artista
@@ -201,57 +178,40 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                Nombre:
-                  type: string
-                Nacionalidad:
-                  type: string
-                FechaNacimientos:
-                  type: string
-      x-code-samples:
-      - lang: 'JavaScript (Fetch)'
-        source: |
-          const formdata = new FormData();
-          // En PATCH, solo enviamos el campo que queremos modificar
-          formdata.append("Nombre", "Nombre Corregido");
+                Nombre: { type: string }
+                Nacionalidad: { type: string }
+                FechaNacimientos: { type: string, format: date }
+      x-codeSamples:
+        - lang: JavaScript
+          source: |
+            const fd = new FormData();
+            fd.append("Nombre", "Nombre Editado");
 
-          const requestOptions = {
-            method: 'PATCH',
-            body: formdata,
-            redirect: 'follow'
-          };
-
-          fetch("https://api.tuservicio.com/artistas/1", requestOptions)
-            .then(response => response.text())
-            .then(result => console.log(result))
-            .catch(error => console.log('error', error));
-      - lang: 'Python (Requests)'
-        source: |
-          import requests
-
-          url = "https://api.tuservicio.com/artistas/1"
-
-          # Solo enviamos el campo a actualizar
-          payload = {
-            'Nombre': 'Nombre Corregido'
-          }
-          
-          # Usamos el método .patch
-          response = requests.patch(url, data=payload)
-
-          print(response.text)
+            fetch("https://api-music-rose.vercel.app/artistas/1", {
+              method: "PATCH",
+              body: fd
+            }).then(r => r.json()).then(console.log);
+        - lang: Python
+          source: |
+            import requests
+            print(requests.patch(
+              "https://api-music-rose.vercel.app/artistas/1",
+              data={"Nombre": "Nombre Editado"}
+            ).json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f PATCH https://api-music-rose.vercel.app/artistas/1 \
+              Nombre="Nombre Editado"
       responses:
-        '200':
-          description: Actualizado parcialmente
-        '404':
-          description: Artista no encontrado
+        '200': { description: Actualizado }
+        '404': { description: No encontrado }
 
     delete:
       summary: Eliminar un artista
@@ -260,17 +220,14 @@ paths:
         - in: path
           name: id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
-        '200':
-          description: Artista eliminado
-        '404':
-          description: Artista no encontrado
+        '200': { description: Eliminado }
+        '404': { description: No encontrado }
 
-  # ==========================================
-  #                 ALBUMES
-  # ==========================================
+  # ====================================================
+  #                       ALBUMES
+  # ====================================================
   /albumes:
     get:
       summary: Obtener todos los álbumes
@@ -284,8 +241,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Album'
-        '500':
-          description: Error interno del servidor
 
     post:
       summary: Crear un álbum
@@ -298,54 +253,49 @@ paths:
               type: object
               required: [Titulo, IdArtista]
               properties:
-                Titulo:
-                  type: string
-                FechaLanzamiento:
-                  type: string
-                  format: date
-                IdArtista:
-                  type: integer
-                Portada:
-                  type: string
-                  format: binary
+                Titulo: { type: string }
+                FechaLanzamiento: { type: string, format: date }
+                IdArtista: { type: integer }
       x-codeSamples:
         - lang: JavaScript
-          label: JS (FormData)
           source: |
             const fd = new FormData();
-            fd.append("Titulo", "Flor de Papel");
+            fd.append("Titulo", "Album Nuevo");
             fd.append("IdArtista", "1");
-            fd.append("Portada", fileInput.files[0]);
+            fd.append("FechaLanzamiento", "2020-01-01");
 
-            fetch("http://localhost:3000/albumes", {
+            fetch("https://api-music-rose.vercel.app/albumes", {
               method: "POST",
               body: fd
             });
         - lang: Python
-          label: Python (requests)
           source: |
             import requests
-            data = {"Titulo": "Flor de Papel", "IdArtista": 1}
-            files = {"Portada": open("cover.jpg", "rb")}
-            requests.post("http://localhost:3000/albumes", data=data, files=files)
+            data = {
+              "Titulo": "Album Nuevo",
+              "IdArtista": 1,
+              "FechaLanzamiento": "2020-01-01"
+            }
+            print(requests.post("https://api-music-rose.vercel.app/albumes", data=data).json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f POST https://api-music-rose.vercel.app/albumes \
+              Titulo="Album Nuevo" \
+              IdArtista=1 \
+              FechaLanzamiento="2020-01-01"
       responses:
-        '201':
-          description: Álbum creado
-        '400':
-          description: Faltan datos obligatorios (Titulo o IdArtista)
-        '404':
-          description: El Artista referenciado no existe
+        '201': { description: Álbum creado }
+        '404': { description: Artista no existe }
 
   /albumes/{id}:
     get:
       summary: Obtener un álbum por ID
       tags: [Albumes]
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
         '200':
           description: Detalle del álbum
@@ -353,78 +303,108 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Album'
-        '404':
-          description: Álbum no encontrado
+        '404': { description: No encontrado }
 
     put:
-      summary: Actualizar un álbum (Completo)
+      summary: Actualizar álbum (completo)
       tags: [Albumes]
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                Titulo:
-                  type: string
-                IdArtista:
-                  type: integer
-                Portada:
-                  type: string
-                  format: binary
+                Titulo: { type: string }
+                FechaLanzamiento: { type: string, format: date }
+                IdArtista: { type: integer }
+      x-codeSamples:
+        - lang: JavaScript
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Título Editado");
+            fd.append("IdArtista", "1");
+
+            fetch("https://api-music-rose.vercel.app/albumes/1", {
+              method: "PUT",
+              body: fd
+            });
+        - lang: Python
+          source: |
+            import requests
+            print(requests.put(
+              "https://api-music-rose.vercel.app/albumes/1",
+              data={"Titulo": "Título Editado", "IdArtista": 1}
+            ).json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f PUT https://api-music-rose.vercel.app/albumes/1 \
+              Titulo="Título Editado" \
+              IdArtista=1
       responses:
-        '200':
-          description: Actualizado correctamente
-        '404':
-          description: Álbum no encontrado
+        '200': { description: Actualizado }
+        '404': { description: No encontrado }
 
     patch:
       summary: Actualizar parcialmente un álbum
       tags: [Albumes]
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                Titulo:
-                  type: string
+                Titulo: { type: string }
+                FechaLanzamiento: { type: string, format: date }
+      x-codeSamples:
+        - lang: JavaScript
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Nuevo Título");
+
+            fetch("https://api-music-rose.vercel.app/albumes/1", {
+              method: "PATCH",
+              body: fd
+            });
+        - lang: Python
+          source: |
+            import requests
+            print(requests.patch(
+              "https://api-music-rose.vercel.app/albumes/1",
+              data={"Titulo": "Nuevo Título"}
+            ).json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f PATCH https://api-music-rose.vercel.app/albumes/1 \
+              Titulo="Nuevo Título"
       responses:
-        '200':
-          description: Actualizado parcialmente
-        '404':
-          description: Álbum no encontrado
+        '200': { description: Actualizado }
+        '404': { description: No encontrado }
 
     delete:
       summary: Eliminar un álbum
       tags: [Albumes]
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
-        '200':
-          description: Eliminado correctamente
-        '404':
-          description: Álbum no encontrado
+        '200': { description: Eliminado }
+        '404': { description: No encontrado }
 
-  # ==========================================
-  #                 CANCIONES
-  # ==========================================
+  # ====================================================
+  #                       CANCIONES
+  # ====================================================
   /canciones:
     get:
       summary: Obtener todas las canciones
@@ -438,11 +418,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cancion'
-        '500':
-          description: Error del servidor
 
     post:
-      summary: Crear una canción (Subir audio)
+      summary: Crear canción
       tags: [Canciones]
       requestBody:
         required: true
@@ -450,189 +428,188 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [Titulo, IdAlbum, ArchivoAudio]
+              required: [Titulo, IdAlbum, IdArtista, Genero]
               properties:
-                Titulo:
-                  type: string
-                Duracion:
-                  type: string
-                IdAlbum:
-                  type: integer
-                ArchivoAudio:
-                  type: string
-                  format: binary
+                Titulo: { type: string }
+                Duracion: { type: string }
+                IdAlbum: { type: integer }
+                IdArtista: { type: integer }
+                Genero: { type: string }
       x-codeSamples:
         - lang: JavaScript
-          label: JS (FormData)
           source: |
             const fd = new FormData();
-            fd.append("Titulo", "Hacer el amor con otro");
-            fd.append("IdAlbum", "10");
-            fd.append("ArchivoAudio", fileInput.files[0]);
+            fd.append("Titulo", "Nueva Canción");
+            fd.append("Genero", "Rock");
+            fd.append("IdAlbum", "1");
+            fd.append("IdArtista", "1");
 
-            fetch("http://localhost:3000/canciones", {
+            fetch("https://api-music-rose.vercel.app/canciones", {
               method: "POST",
               body: fd
             });
         - lang: Python
-          label: Python (requests)
           source: |
             import requests
-            data = {"Titulo": "Cancion A", "IdAlbum": 10}
-            files = {"ArchivoAudio": open("song.mp3", "rb")}
-            requests.post("http://localhost:3000/canciones", data=data, files=files)
+            data = {
+              "Titulo": "Nueva Canción",
+              "Genero": "Rock",
+              "IdAlbum": 1,
+              "IdArtista": 1
+            }
+            print(requests.post("https://api-music-rose.vercel.app/canciones", data=data).json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f POST https://api-music-rose.vercel.app/canciones \
+              Titulo="Nueva Canción" \
+              Genero="Rock" \
+              IdAlbum=1 \
+              IdArtista=1
       responses:
-        '201':
-          description: Canción creada exitosamente
-        '400':
-          description: Datos inválidos o faltantes
-        '422':
-          description: Archivo de audio no soportado
+        '201': { description: Canción creada }
 
   /canciones/{id}:
     get:
-      summary: Obtener una canción por ID
+      summary: Obtener canción por ID
       tags: [Canciones]
       parameters:
         - in: path
           name: id
+          schema: { type: integer }
           required: true
-          schema:
-            type: integer
       responses:
         '200':
-          description: Detalles de la canción
+          description: Detalle de canción
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cancion'
-        '404':
-          description: Canción no encontrada
+        '404': { description: No encontrada }
 
     put:
-      summary: Actualizar una canción (Completo)
+      summary: Actualizar canción (completo)
       tags: [Canciones]
       parameters:
         - in: path
           name: id
+          schema: { type: integer }
           required: true
-          schema:
-            type: integer
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                Titulo:
-                  type: string
-                IdAlbum:
-                  type: integer
-                ArchivoAudio:
-                  type: string
-                  format: binary
+                Titulo: { type: string }
+                Duracion: { type: string }
+                Genero: { type: string }
+                IdAlbum: { type: integer }
+                IdArtista: { type: integer }
+      x-codeSamples:
+        - lang: JavaScript
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Editada");
+            fd.append("Genero", "Pop");
+
+            fetch("https://api-music-rose.vercel.app/canciones/1", {
+              method: "PUT",
+              body: fd
+            });
+        - lang: Python
+          source: |
+            import requests
+            print(requests.put(
+              "https://api-music-rose.vercel.app/canciones/1",
+              data={"Titulo": "Editada", "Genero": "Pop"}
+            ).json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f PUT https://api-music-rose.vercel.app/canciones/1 \
+              Titulo="Editada" \
+              Genero="Pop"
       responses:
-        '200':
-          description: Actualizada
-        '404':
-          description: Canción no encontrada
+        '200': { description: Actualizada }
 
     patch:
-      summary: Actualizar parcialmente una canción
+      summary: Actualizar parcialmente canción
       tags: [Canciones]
       parameters:
         - in: path
           name: id
+          schema: { type: integer }
           required: true
-          schema:
-            type: integer
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                Titulo:
-                  type: string
+                Titulo: { type: string }
+                Genero: { type: string }
+      x-codeSamples:
+        - lang: JavaScript
+          source: |
+            const fd = new FormData();
+            fd.append("Titulo", "Nombre Modificado");
+
+            fetch("https://api-music-rose.vercel.app/canciones/1", {
+              method: "PATCH",
+              body: fd
+            });
+        - lang: Python
+          source: |
+            import requests
+            print(requests.patch(
+              "https://api-music-rose.vercel.app/canciones/1",
+              data={"Titulo": "Nombre Modificado"}
+            ).json())
+        - lang: cURL / HTTPie
+          source: |
+            http -f PATCH https://api-music-rose.vercel.app/canciones/1 \
+              Titulo="Nombre Modificado"
       responses:
-        '200':
-          description: Actualizada parcialmente
-        '404':
-          description: Canción no encontrada
+        '200': { description: Actualizada }
 
     delete:
-      summary: Eliminar una canción
+      summary: Eliminar canción
       tags: [Canciones]
       parameters:
         - in: path
           name: id
+          schema: { type: integer }
           required: true
-          schema:
-            type: integer
       responses:
-        '200':
-          description: Eliminada correctamente
-        '404':
-          description: Canción no encontrada
+        '200': { description: Eliminada }
+        '404': { description: No encontrada }
 
-# ==========================================
-#           MODELOS (SCHEMAS)
-# ==========================================
+# ====================================================
+#                      MODELOS
+# ====================================================
 components:
   schemas:
     Artista:
       type: object
-      # x-tags ayuda a agruparlos si usas redocly
-      x-tags: [Modelos] 
       properties:
-        id:
-          type: integer
-          example: 1
-        Nombre:
-          type: string
-          example: Alejandra Guzmán
-        Nacionalidad:
-          type: string
-          example: México
-        FechaNacimientos:
-          type: string
-          format: date
-          example: '1968-02-09'
+        id: { type: integer, example: 1 }
+        Nombre: { type: string, example: Alejandra Guzmán }
+        Nacionalidad: { type: string, example: México }
+        FechaNacimientos: { type: string, format: date, example: "1968-02-09" }
 
     Album:
       type: object
-      x-tags: [Modelos]
       properties:
-        id:
-          type: integer
-          example: 10
-        Titulo:
-          type: string
-          example: Flor de Papel
-        FechaLanzamiento:
-          type: string
-          format: date
-          example: '1991-10-15'
-        IdArtista:
-          type: integer
-          example: 1
+        id: { type: integer, example: 1 }
+        Titulo: { type: string, example: Flor de Papel }
+        FechaLanzamiento: { type: string, format: date, example: "1991-10-15" }
+        IdArtista: { type: integer, example: 1 }
 
     Cancion:
       type: object
-      x-tags: [Modelos]
       properties:
-        id:
-          type: integer
-          example: 45
-        Titulo:
-          type: string
-          example: Hacer el amor con otro
-        Duracion:
-          type: string
-          example: '04:38'
-        IdAlbum:
-          type: integer
-          example: 10
-        IdArtista:
-          type: integer
-          example: 1
+        id: { type: integer, example: 1 }
+        Titulo: { type: string, example: Hacer el amor con otro }
+        Duracion: { type: string, example: "04:38" }
+        Genero: { type: string, example: Rock }
+        IdAlbum: { type: integer, example: 10 }
+        IdArtista: { type: integer, example: 1 }
